@@ -16,9 +16,9 @@ This location is then compared to the theoretical polar axis given by the
 local latitude, and a recommendation for adjusting the mount axis is given.
 
 While the mount model is very simple and does not take into account complicating
-factors, I have been happy with the resuls, at least up to a focal length of 200mm
+factors, I have been happy with the results, at least up to a focal length of 200mm
 and with exposures of 2-3 minutes. I have not tried to push the system to its limits.
-Your mileage may vary.
+Your mileage may vary. I am happy about feedback that would allow me to improve the model.
 
 ## Requirements
   * Python >= 3.6
