@@ -81,4 +81,4 @@ to take an exposure, plate-solve, and display an overlay.
 
 ## Mathematical model
 
-The mathematical model used for fitting is described in the file MathematicalModel.ipynb
+The model used for fitting is described in the file [MathematicalModel.ipynb](https://nbviewer.jupyter.org/github/hronellenfitsch/astrotools/blob/master/MathematicalModel.ipynb).
