@@ -78,3 +78,7 @@ Then, run
     ./aim.py
 
 to take an exposure, plate-solve, and display an overlay.
+
+## Mathematical model
+
+The mathematical model used for fitting is described in the file MathematicalModel.ipynb

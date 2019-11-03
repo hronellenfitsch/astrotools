@@ -240,7 +240,7 @@ def print_guidance(here, res, pixel_threshold, pixel_scale):
     print("")
 
     if np.abs(angular_mismatch) < 1e-6:
-        print("WARNING: Angular mismatch is tiny-- you are probably too well aligned for the given time between exposures. Increase --wait-time!")
+        print("WARNING: Angular mismatch is tiny. You are probably too well aligned for the given time between exposures. Increase --wait-time or take more exposures!")
 
     # estimate drift using fitted mount axis
     T = 86164.0905 # sidereal day
