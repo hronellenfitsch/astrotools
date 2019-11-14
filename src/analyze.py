@@ -79,7 +79,8 @@ def plate_solve_data(fname):
         "-p", f"-D{dirn}", fname])
 
     # Read world coordinate system
-    w = WCS(wcsfile)
+    hdu = fits.open(wcsfile)
+    w = WCS(hdu[0].header)
 
     # n, m = Y.shape
     try:
@@ -103,31 +104,6 @@ def plate_solve_data(fname):
 def pixel_scale(w):
     arcsec_per_pix = (proj_plane_pixel_scales(w)[0]*(u.degree/u.pixel)).to(u.arcsec/u.pixel)
     return arcsec_per_pix.value
-
-def plate_solve(Y):
-    """ Plate solve image using astrometry.net and return the celestial
-    coordinates of the center
-    """
-    # save intermediate file
-    with open("tmp/tmp.png", "wb") as f:
-        imageio.imwrite(f, Y, "png")
-
-    subprocess.run(["solve-field", "--overwrite", "-p",
-    "-Nnone", "--match", "none", "--rdls", "none", "--corr", "none", "--solved", "none",
-    "-Dtmp", "tmp/tmp.png"])
-
-    # Read world coordinate system
-    w = WCS("tmp/tmp.wcs")
-
-    n, m = Y.shape
-
-    # field center coordinates, offset=0
-    radec = w.wcs_pix2world(m/2, n/2, 0)
-
-    ra = float(radec[0])
-    dec = float(radec[1])
-
-    return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
 
 def altaz_to_cartesian(alt, az):
     """ Converts alt-az coordinates into right-handed Cartesian coordinates
@@ -257,7 +233,7 @@ def print_guidance(here, res, pixel_threshold, pixel_scale):
     print(f"Estimated drift velocity: {v_px/pixel_scale.to(u.radian/u.pixel).value:.2} px/sec")
     print(f"Estimated maximum exposure time for a drift of {pixel_threshold} px: {round(max_time, 1)} sec")
 
-def print_empirical_drift(Ys, dts):
+def print_empirical_drift(Ys, dts, pixel_scale, pixel_threshold):
     # calculate empirical pixel drift velocity
     empirical_drift = [register_translation(Y1, Y2, 150)[0] for Y1, Y2 in zip(Ys[:-1], Ys[1:])]
     measured_drift = [np.linalg.norm(d/dt) for d, dt in zip(empirical_drift, dts)]
@@ -267,13 +243,18 @@ def print_empirical_drift(Ys, dts):
     print(measured_drift)
     print(f"Measured drift velocity: {drift_mean:.2} +- {drift_std:.1} px/sec")
 
+    max_time = pixel_threshold/drift_mean
+    max_time_std = (pixel_threshold/drift_mean**2)*drift_std # error propagation
+
+    print(f"Estimated maximum exposure time for a drift of {pixel_threshold} px: {round(max_time, 1)} +- {round(max_time_std, 1)} sec")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("files", help="file names of EXIF-tagged raw images to analyze", nargs="+")
 
-    parser.add_argument("--lat", default=42.368172, help="Observer latitude in degrees")
-    parser.add_argument("--lon", default=-71.081802, help="Observer longitude in degrees")
+    parser.add_argument("--lat", default=42.368136, help="Observer latitude in degrees")
+    parser.add_argument("--lon", default=-71.081797, help="Observer longitude in degrees")
     parser.add_argument("--utc-offset", default=-5, help="Observer offset from UTC")
     parser.add_argument("--height", default=9, help="Observer height above sea level in meters")
     parser.add_argument("-p", "--pixel-threshold", default=2, type=float, help="max pixel shift allowed during exposures")
@@ -309,4 +290,4 @@ if __name__ == "__main__":
     if args.estimate_drift:
         print("Estimating drift...")
         Ys = [read_luma(fname) for fname in args.files]
-        print_empirical_drift(Ys, dts)
+        print_empirical_drift(Ys, dts, args.pixel_scale*u.arcsec/u.pixel, args.pixel_threshold)
