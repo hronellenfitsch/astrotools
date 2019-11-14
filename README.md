@@ -26,7 +26,7 @@ Your mileage may vary. I am happy about feedback that would allow me to improve 
   * rawpy
   * imageio
   * exifread
-  * local install of astrometry.net (in particular, the solve-field and plotann.py tools must be callable)
+  * local install of [astrometry.net](http://astrometry.net/doc/build.html) (in particular, the solve-field and plotann.py tools must be callable)
   * libgphoto2 and python bindings
 
 ## Polar alignment with capture.py and analyze.py
