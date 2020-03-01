@@ -29,9 +29,10 @@ Your mileage may vary. I am happy about feedback that would allow me to improve 
   * local install of [astrometry.net](http://astrometry.net/doc/build.html) (in particular, the solve-field and plotann.py tools must be callable)
   * libgphoto2 and python bindings
 
-## Polar alignment with capture.py and analyze.py
+## Polar alignment with align.py
 Make sure your mount is roughly polar aligned.
-Attach your camera via USB and set the desired exposure length. I have found 10s to work well.
+Attach your camera via USB and set the desired exposure length. I have found 6s at f/4 and ISO 200
+on a Nikon D7100 to work well.
 You may also want to shoot in JPEG instead of RAW to speed up
 the plate-solving process.
 
@@ -40,29 +41,22 @@ and somewhere halfway between the horizon and the meridian, such that
 errors in altitude and azimuth alignment are about equal in magnitude.
 
 To obtain, e.g., 3 measurement exposures with 20 seconds of wait
-time between them, run
+time between them and get the mount axis estimate, run
 
-    ./capture.py --wait 20 3
+    ./align.py --lat your_latitude --lon your_longitude --height your_height --wait 20 3
 
-The resulting files will be put in the ./tmp folder and automatically
+The resulting files will be put in a temporary folder and automatically
 plate-solved.
 Make sure that your camera's time is set correctly, since EXIF data will
 be used to convert the plate-solved coordinates into a local frame.
 
-Next, we analyze them and fit the mount model. For this, run
+A full example input might look like
 
-    ./analyze.py --lat your_latitude --lon your_longitude --height your_height --utc-offset your_offset --pixel-scale your_pixel_scale tmp/\*.jpg
+    ./align.py --lat 42.358991 --lon -71.091619 --height 9 --wait 20 3
 
-For instance, during normal time in the EST time zone, the utc_offset would
-be -5. For my camera with a 200mm lens, the pixel scale is approx
-4.02 px/arcsec. MIT's Killian court is about 9m above sea level.
-So an example input might look like
-
-    ./analyze.py --lat 42.358991 --lon -71.091619 --height 9 --utc-offset -5 --pixel-scale 4.02
-
-The script will analyze the files and tell you its estimate of the mount position,
-alignment error, and estimated pixel drift. After making adjustments to the mount, run
-the two scripts again until satisfied.
+The script will take exposures, automatically plate-solve them, and tell you its estimate of the mount axis
+alignment, alignment error, and estimated pixel drift. After making adjustments to the mount, run
+the script again until satisfied.
 
 ## Aiming your camera using aim.py
 After successful polar alignment you want to aim your camera at your target.
