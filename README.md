@@ -54,6 +54,7 @@ A full example input might look like
 
     ./align.py --lat 42.358991 --lon -71.091619 --height 9 --wait 20 3
 
+Here, latitude and longitude are given in degrees and height above sea level in meters.
 The script will take exposures, automatically plate-solve them, and tell you its estimate of the mount axis
 alignment, alignment error, and estimated pixel drift. After making adjustments to the mount, run
 the script again until satisfied.
