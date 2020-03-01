@@ -64,19 +64,11 @@ def approximate_exposure_time(fname, utc_offset, loc):
     return s_time + 0.5*e_time - utc_offset
 
 def plate_solve_data(fname):
-    # save intermediate file
-    # with open("tmp/tmp.png", "wb") as f:
-    #     imageio.imwrite(f, Y, "png")
-
+    """ Take the .wcs file spit out by solve-plate and extract
+    the center of the image in (Ra, Dec) as well as the pixel scale of the image.
+    """
     path, ext = os.path.splitext(fname)
-
     wcsfile = path + ".wcs"
-    if not os.path.exists(wcsfile):
-        # do plate solve
-        dirn = os.path.dirname(fname)
-        subprocess.run(["solve-field", "--overwrite", "-L3", "-H7", "-z2",
-        "-Nnone", "--match", "none", "--rdls", "none", "--corr", "none", "--solved", "none", "--index-xyls", "none",
-        "-p", f"-D{dirn}", fname])
 
     # Read world coordinate system
     hdu = fits.open(wcsfile)
@@ -96,12 +88,14 @@ def plate_solve_data(fname):
     ra = float(radec[0])
     dec = float(radec[1])
 
+    pixel_scale = pixel_scale_from_wcs(w)
+
     print(f"Detected center of image (Ra, Dec) = {ra}, {dec}")
-    print(f"Pixel scale: {pixel_scale(w):.4} arcsec/px")
+    print(f"Pixel scale: {pixel_scale:.4} arcsec/px")
 
-    return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
+    return SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs'), pixel_scale
 
-def pixel_scale(w):
+def pixel_scale_from_wcs(w):
     arcsec_per_pix = (proj_plane_pixel_scales(w)[0]*(u.degree/u.pixel)).to(u.arcsec/u.pixel)
     return arcsec_per_pix.value
 
@@ -148,7 +142,7 @@ def R_mat(e, θ):
     return np.eye(3) + np.sin(θ)*K + (1 - np.cos(θ))*np.dot(K, K)
 
 # try to infer the axis m
-def find_m(ys, dts, resample=False):
+def find_m(here, ys, dts, resample=False):
     """ Fit the mount axis m to the data
     """
     T = 86164.0905 # sidereal day
@@ -187,7 +181,7 @@ def fit_errors(res):
     # standard error estimates for alt and az
     return np.sqrt(np.diag(cov))
 
-def print_guidance(here, res, pixel_threshold, pixel_scale):
+def print_guidance(here, res, pixel_threshold, pixel_scale, std_errors, y):
     n_ax = altaz_to_cartesian(here.lat.radian, 0) # true polar axis
     m_ax = altaz_to_cartesian(res.x[0], res.x[1]) # estimated mount axis
 
@@ -218,20 +212,23 @@ def print_guidance(here, res, pixel_threshold, pixel_scale):
     if np.abs(angular_mismatch) < 1e-6:
         print("WARNING: Angular mismatch is tiny. You are probably too well aligned for the given time between exposures. Increase --wait-time or take more exposures!")
 
-    # estimate drift using fitted mount axis
-    T = 86164.0905 # sidereal day
-    Ω = 2*np.pi/T
-
-    y_last = ys[-1]
-
-    # estimate angular drift velocity
-    v_px = Ω*np.linalg.norm(np.cross(m_ax - n_ax, y_last))
-    pixels_est = lambda t: ((v_px*u.radian).to(u.arcsec)/pixel_scale).value*t
-
-    max_time = pixel_threshold/v_px*pixel_scale.to(u.radian/u.pixel).value
+    v_px, max_time = estimate_drift_from_fit(m_ax, n_ax, y, pixel_threshold, pixel_scale)
 
     print(f"Estimated drift velocity: {v_px/pixel_scale.to(u.radian/u.pixel).value:.2} px/sec")
     print(f"Estimated maximum exposure time for a drift of {pixel_threshold} px: {round(max_time, 1)} sec")
+
+def estimate_drift_from_fit(m_ax, n_ax, y, pixel_threshold, pixel_scale):
+    # estimate drift using true polar axis m_ax, fitted axis n_ax, and current cartesian position y
+    T = 86164.0905 # sidereal day
+    Ω = 2*np.pi/T
+
+    # estimate angular drift velocity
+    v_px = Ω*np.linalg.norm(np.cross(m_ax - n_ax, y))
+    # pixels_est = lambda t: ((v_px*u.radian).to(u.arcsec)/pixel_scale).value*t
+
+    max_time = pixel_threshold/v_px*pixel_scale.to(u.radian/u.pixel).value
+
+    return v_px, max_time
 
 def print_empirical_drift(Ys, dts, pixel_scale, pixel_threshold):
     # calculate empirical pixel drift velocity
@@ -280,12 +277,12 @@ if __name__ == "__main__":
     ys = [radec_to_cartesian(c, mid_time, here) for c, mid_time in zip(cs, mid_times)]
 
     # Fit position of mount axis
-    res = find_m(ys, dts)
+    res = find_m(here, ys, dts)
     std_errors = fit_errors(res)
 
     print(res.message)
 
-    print_guidance(here, res, args.pixel_threshold, args.pixel_scale*u.arcsec/u.pixel)
+    print_guidance(here, res, args.pixel_threshold, args.pixel_scale*u.arcsec/u.pixel, std_errors, ys[-1])
 
     if args.estimate_drift:
         print("Estimating drift...")

@@ -20,6 +20,7 @@ def take_exposure(i, dir):
     _, ext = os.path.splitext(file_path.name)
     target = os.path.join(dir, f'{i}{ext}')
 
+    time.sleep(1)
     camera_file = camera.file_get(
         file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
 
@@ -28,17 +29,24 @@ def take_exposure(i, dir):
 
     return target
 
-def plate_solve(fname):
+def plate_solve(fname, L=3, H=7, ra=None, dec=None):
     path, ext = os.path.splitext(fname)
 
     wcsfile = path + ".wcs"
     print(wcsfile)
 
     dirn = os.path.dirname(fname)
-    print("Plate-solving in the background")
-    return subprocess.Popen(["solve-field", "--overwrite", "-z2", "-L3", "-H7",
-        "-Nnone", "--match", "none", "--rdls", "none", "--corr", "none", "--solved", "none", "--index-xyls", "none",
-         "-p", f"-D{dirn}", fname])
+    print("Plate-solving...")
+    params = ["solve-field", "--overwrite", "-z2", "-L", str(L), "-H", str(H),
+        "-Nnone", "--match", "none", "--rdls", "none", "--corr", "none",
+        "--solved", "none", "--index-xyls", "none", "-p", f"-D{dirn}"]
+
+    if ra is not None:
+        params += ["--ra", str(ra)]
+    if dec is not None:
+        params += ["--dec", str(dec)]
+
+    return subprocess.Popen(params + [fname], stdout=subprocess.DEVNULL)
 
 def cleanup(dir):
     subprocess.run(["rm"] + glob(os.path.join(dir, "*")))
