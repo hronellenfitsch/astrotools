@@ -46,3 +46,5 @@ if __name__ == "__main__":
         path, ext = os.path.splitext(fname)
         aimed_fname = path + "_ann.jpg"
         subprocess.run(["xdg-open", aimed_fname])
+
+        time.sleep(5)
