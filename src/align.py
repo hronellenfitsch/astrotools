@@ -107,14 +107,14 @@ if __name__ == "__main__":
 
     parser.add_argument("N", type=int, help="number of exposures to take")
 
-    parser.add_argument("--lat", default=42.368136, help="Observer latitude in degrees")
-    parser.add_argument("--lon", default=-71.081797, help="Observer longitude in degrees")
+    parser.add_argument("--lat", default=42.368144, help="Observer latitude in degrees")
+    parser.add_argument("--lon", default=-71.081818, help="Observer longitude in degrees")
     parser.add_argument("--utc-offset", default=utc_offset(), help="Observer offset from UTC. Per default taken from the system clock")
     parser.add_argument("--height", default=9, help="Observer height above sea level in meters")
     parser.add_argument("-p", "--pixel-threshold", default=2, type=float, help="max pixel shift allowed during exposures")
     parser.add_argument("--estimate-drift", action="store_true", help="estimate empirical drift between alignment exposures using image overlaps")
-    parser.add_argument("--L", default=3.0, type=float, help="approximate length-wise image scale in degrees")
-    parser.add_argument("--H", default=7.0, type=float, help="approximate height-wise image scale in degrees")
+    parser.add_argument("--L", default=4, type=float, help="approximate length-wise image scale in degrees")
+    parser.add_argument("--H", default=3, type=float, help="approximate height-wise image scale in degrees")
     parser.add_argument("--wait", type=float, default=10, help="Time in seconds to wait between exposures")
 
     args = parser.parse_args()
