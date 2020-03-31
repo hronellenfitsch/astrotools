@@ -30,8 +30,8 @@ def expose_and_solve(args, i, dir, here, ra_guess=None, dec_guess=None):
     Then use the information in the location here to
     plate solve and extract sky coordinates
     """
-    # fname = take_exposure(i, dir)
-    fname = f"tmp/{i}.jpg" #DEBUG for local data
+    fname = take_exposure(i, dir)
+    # fname = f"tmp/{i}.jpg" #DEBUG for local data
     plate_solve(fname, ra=ra_guess, dec=dec_guess).communicate()
 
     # use EXIF data to estimate when this image was taken
@@ -50,7 +50,7 @@ def estimate_axis(args, here, mid_times, ys, pix_scale):
     """ Estimate the mount axis and print the guidance message
     """
     dts = [(t2 - t1).sec for t1, t2 in zip(mid_times[:-1], mid_times[1:])]
-    res = find_m(here, ys, dts)
+    res = find_m(here, ys, mid_times)
     std_errors = fit_errors(res)
 
     print("Optimization: ", res.message)

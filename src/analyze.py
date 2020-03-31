@@ -142,8 +142,9 @@ def R_mat(e, θ):
     return np.eye(3) + np.sin(θ)*K + (1 - np.cos(θ))*np.dot(K, K)
 
 # try to infer the axis m
-def find_m(here, ys, dts):
-    """ Fit the mount axis m to the data
+def find_m(here, ys, times):
+    """ Fit the mount axis m to the data.
+    times must be an AstroPy TimeDelta
     """
     T = 86164.0905 # sidereal day
     Ω = 2*np.pi/T
@@ -153,13 +154,17 @@ def find_m(here, ys, dts):
         m = altaz_to_cartesian(alt, az)
 
         # rotate y's
+        y_2s = []
         y_rots = []
-        for y, dt in zip(ys[0:-1], dts):
-            R = R_mat(m, -Ω*dt)
-            y_rots.append(np.dot(R, y))
+        for i, (y1, t1) in enumerate(zip(ys[:-1], times[:-1])):
+            for y2, t2 in zip(ys[i+1:], times[i+1:]):
+                dt = (t2 - t1).sec
+                R = R_mat(m, -Ω*dt)
 
-        return np.concatenate([y1 - y_rot for i, (y1, y_rot) in enumerate(zip(ys[1:], y_rots))
-                              if i in sample_idxs])
+                y_2s.append(y2)
+                y_rots.append(np.dot(R, y1))
+
+        return np.concatenate([y2 - y_rot for y2, y_rot in zip(y_2s, y_rots)])
 
     return least_squares(residuals, np.array([here.lat.radian, 0]))
 
@@ -169,7 +174,8 @@ def fit_errors(res):
     H = jac.T.dot(jac) # Hessian of the cost function
 
     n, p = jac.shape
-    cov = 2*res.cost/(n - p)*np.linalg.inv(H) # estimate for the covariance matrix. factor 2 is because data points are constrained to lie on the unit sphere
+    cov = 2*res.cost/(n - p)*np.linalg.inv(H) # estimate for the covariance matrix.
+        #factor 2 is because data points are constrained to lie on the unit sphere
 
     # standard error estimates for alt and az
     return np.sqrt(np.diag(cov))
