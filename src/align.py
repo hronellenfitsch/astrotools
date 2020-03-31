@@ -30,8 +30,8 @@ def expose_and_solve(args, i, dir, here, ra_guess=None, dec_guess=None):
     Then use the information in the location here to
     plate solve and extract sky coordinates
     """
-    fname = take_exposure(i, dir)
-    # fname = f"tmp/{i}.jpg" #DEBUG for local data
+    # fname = take_exposure(i, dir)
+    fname = f"tmp/{i}.jpg" #DEBUG for local data
     plate_solve(fname, ra=ra_guess, dec=dec_guess).communicate()
 
     # use EXIF data to estimate when this image was taken

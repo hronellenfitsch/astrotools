@@ -142,18 +142,11 @@ def R_mat(e, θ):
     return np.eye(3) + np.sin(θ)*K + (1 - np.cos(θ))*np.dot(K, K)
 
 # try to infer the axis m
-def find_m(here, ys, dts, resample=False):
+def find_m(here, ys, dts):
     """ Fit the mount axis m to the data
     """
     T = 86164.0905 # sidereal day
     Ω = 2*np.pi/T
-
-    if resample:
-        """ Bootstrap resampling
-        """
-        sample_idxs = np.random.choice(len(ys) - 1, len(ys) - 1)
-    else:
-        sample_idxs = np.arange(len(ys) - 1)
 
     def residuals(coords):
         alt, az = coords
