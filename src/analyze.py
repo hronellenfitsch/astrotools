@@ -231,7 +231,7 @@ def estimate_drift_from_fit(m_ax, n_ax, y, pixel_threshold, pixel_scale):
 
 def print_empirical_drift(Ys, dts, pixel_scale, pixel_threshold):
     # calculate empirical pixel drift velocity
-    empirical_drift = [register_translation(Y1, Y2, 150)[0] for Y1, Y2 in zip(Ys[:-1], Ys[1:])]
+    empirical_drift = [register_translation(Y1, Y2, 450)[0] for Y1, Y2 in zip(Ys[:-1], Ys[1:])]
     measured_drift = [np.linalg.norm(d/dt) for d, dt in zip(empirical_drift, dts)]
 
     drift_mean = np.mean(measured_drift)

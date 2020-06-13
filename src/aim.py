@@ -30,8 +30,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--aim-file", default="", type=str, help="Aim this file instead of taking exposure")
-    parser.add_argument("--L", default=4.0, type=float, help="approximate length-wise image scale in degrees")
-    parser.add_argument("--H", default=5.0, type=float, help="approximate height-wise image scale in degrees")
+    parser.add_argument("--L", default=3.0, type=float, help="approximate length-wise image scale in degrees")
+    parser.add_argument("--H", default=4.0, type=float, help="approximate height-wise image scale in degrees")
     parser.add_argument("--brightness", default=2.0, type=float,
         help="Adjust brightness of the exposure by this factor to be able to see fainter stars")
     parser.add_argument("-T", "--target", default=None, nargs=3, help="target name and ra-dec to plot.")
@@ -55,4 +55,4 @@ if __name__ == "__main__":
         aimed_fname = path + "_ann.jpg"
         subprocess.run(["xdg-open", aimed_fname])
 
-        time.sleep(5)
+        time.sleep(50)
